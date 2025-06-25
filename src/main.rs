@@ -11,7 +11,9 @@ pub struct Token {
 pub enum Kind {
     Eof,
     Plus,
+    PlusPlus,
     Minus,
+    MinusMinus,
 }
 
 struct Lexer<'a> {
@@ -30,8 +32,20 @@ impl<'a> Lexer<'a> {
     fn read_next_kind(&mut self) -> Kind {
         for c in self.chars.by_ref() {
             match c {
-                '+' => return Kind::Plus,
-                '-' => return Kind::Minus,
+                '+' => match self.peek() {
+                    Some('+') => {
+                        self.chars.next();
+                        return Kind::PlusPlus;
+                    }
+                    _ => return Kind::Plus,
+                },
+                '-' => match self.peek() {
+                    Some('-') => {
+                        self.chars.next();
+                        return Kind::MinusMinus;
+                    }
+                    _ => return Kind::Minus,
+                },
                 _ => {}
             }
         }
@@ -47,6 +61,10 @@ impl<'a> Lexer<'a> {
 
     fn offset(&self) -> usize {
         self.source.len() - self.chars.as_str().len()
+    }
+
+    fn peek(&self) -> Option<char> {
+        self.chars.clone().next()
     }
 }
 
