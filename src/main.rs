@@ -10,10 +10,10 @@ pub struct Token {
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Kind {
     Eof,
-    Plus,
-    PlusPlus,
-    Minus,
-    MinusMinus,
+    GreaterThan,
+    GreaterThanEqual,
+    LessThan,
+    LessThanEqual,
 }
 
 struct Lexer<'a> {
@@ -32,19 +32,19 @@ impl<'a> Lexer<'a> {
     fn read_next_kind(&mut self) -> Kind {
         for c in self.chars.by_ref() {
             match c {
-                '+' => match self.peek() {
-                    Some('+') => {
+                '>' => match self.peek() {
+                    Some('=') => {
                         self.chars.next();
-                        return Kind::PlusPlus;
+                        return Kind::GreaterThanEqual;
                     }
-                    _ => return Kind::Plus,
+                    _ => return Kind::GreaterThan,
                 },
-                '-' => match self.peek() {
-                    Some('-') => {
+                '<' => match self.peek() {
+                    Some('=') => {
                         self.chars.next();
-                        return Kind::MinusMinus;
+                        return Kind::LessThanEqual;
                     }
-                    _ => return Kind::Minus,
+                    _ => return Kind::LessThan,
                 },
                 _ => {}
             }
