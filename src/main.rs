@@ -14,6 +14,10 @@ pub enum Kind {
     GreaterThanEqual,
     LessThan,
     LessThanEqual,
+    Identifier,
+    If,
+    Begin,
+    End,
 }
 
 struct Lexer<'a> {
@@ -66,10 +70,22 @@ impl<'a> Lexer<'a> {
     fn peek(&self) -> Option<char> {
         self.chars.clone().next()
     }
+
+    fn match_keyword(&self, ident: &str) -> Kind {
+        if ident.len() == 1 || ident.len() > 10 {
+            return Kind::Identifier;
+        }
+        match ident {
+            "if" => Kind::If,
+            "begin" => Kind::Begin,
+            "end" => Kind::End,
+            _ => Kind::Identifier,
+        }
+    }
 }
 
 fn main() {
-    let str = "+-++--+";
+    let str = "if a < 10 begin print 'ok' end";
     let mut lexer = Lexer::new(str);
     loop {
         let t = lexer.read_next_token();
