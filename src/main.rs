@@ -18,6 +18,7 @@ pub enum Kind {
     If,
     Begin,
     End,
+    WhiteSpace,
 }
 
 struct Lexer<'a> {
@@ -31,6 +32,10 @@ impl<'a> Lexer<'a> {
             source,
             chars: source.chars(),
         }
+    }
+
+    fn is_eof(&self) -> bool {
+        self.chars.as_str().is_empty()
     }
 
     fn read_next_kind(&mut self) -> Kind {
@@ -50,6 +55,7 @@ impl<'a> Lexer<'a> {
                     }
                     _ => return Kind::LessThan,
                 },
+                ' ' => return Kind::WhiteSpace,
                 _ => {}
             }
         }
@@ -70,16 +76,17 @@ impl<'a> Lexer<'a> {
     fn peek(&self) -> Option<char> {
         self.chars.clone().next()
     }
+}
 
-    fn match_keyword(&self, ident: &str) -> Kind {
-        if ident.len() == 1 || ident.len() > 10 {
-            return Kind::Identifier;
-        }
-        match ident {
-            "if" => Kind::If,
-            "begin" => Kind::Begin,
-            "end" => Kind::End,
-            _ => Kind::Identifier,
+impl Iterator for Lexer<'_> {
+    type Item = Token;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if !self.is_eof() {
+            let token = self.read_next_token();
+            Some(token)
+        } else {
+            None
         }
     }
 }
@@ -93,5 +100,70 @@ fn main() {
         if t.kind == Kind::Eof {
             break;
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{Kind, Lexer, Token};
+
+    #[test]
+    fn test_iterator() {
+        let source = "< > <= >=";
+        let lexer = Lexer::new(source);
+        let tokens = lexer.collect::<Vec<Token>>();
+        let expect = vec![
+            Token {
+                kind: Kind::LessThan,
+                start: 0,
+                end: 1,
+            },
+            Token {
+                kind: Kind::WhiteSpace,
+                start: 1,
+                end: 2,
+            },
+            Token {
+                kind: Kind::GreaterThan,
+                start: 2,
+                end: 3,
+            },
+            Token {
+                kind: Kind::WhiteSpace,
+                start: 3,
+                end: 4,
+            },
+            Token {
+                kind: Kind::LessThanEqual,
+                start: 4,
+                end: 6,
+            },
+            Token {
+                kind: Kind::WhiteSpace,
+                start: 6,
+                end: 7,
+            },
+            Token {
+                kind: Kind::GreaterThanEqual,
+                start: 7,
+                end: 9,
+            },
+        ];
+        assert_eq!(expect, tokens);
+    }
+    #[test]
+    fn test_basics() {
+        let _source = "if a < 10 begin print 'ok' end";
+        assert_eq!(true, true);
+    }
+    #[test]
+    fn test_basics_more() {
+        let _source = "
+if @test = 1 begin
+select 1
+where 1=1
+end
+";
+        assert_eq!(true, true);
     }
 }
